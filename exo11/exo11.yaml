@@ -1,0 +1,21 @@
+- name: play to generate a kind 
+  hosts: all
+  tasks:
+  - name: debug 
+    debug:
+      msg: "Preparing for {{ inventory_hostname }}"
+  - name: host file is generated
+    template:
+      #template is by convention located under template folder
+      src: exo11.conf
+      dest: /tmp/tmphosts
+    delegate_to: localhost
+  - name: content is saved
+    shell:
+      cmd: cat /tmp/tmphosts >> /tmp/hosts ; echo "\n" >> /tmp/hosts
+    delegate_to: localhost
+  - name : delete tmp file
+    file:
+      path: /tmp/tmphosts
+      state: absent
+    delegate_to: localhost

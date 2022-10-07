@@ -1,0 +1,26 @@
+- hosts: container
+  tasks: 
+  - name: create hello file
+    ansible.builtin.file:
+      path: /tmp/hello.txt
+      state: touch
+  - name: fill hello file
+    ansible.builtin.lineinfile:
+      path: /tmp/hello.txt
+      line: HELLO
+  - name: create hi file
+    ansible.builtin.file:
+      path: /tmp/hi.txt
+      state: touch
+  - name: fill hi file
+    ansible.builtin.lineinfile:
+      path: /tmp/hi.txt
+      line: HI
+  - name: file archived
+    community.general.archive:
+      path:
+      - /tmp/hello.txt
+      - /tmp/hi.txt
+      dest: /tmp/myarchive.zip
+      format: zip
+    

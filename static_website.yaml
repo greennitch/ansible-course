@@ -1,0 +1,39 @@
+- hosts: container
+  become: yes
+  # WARNING variable names must only start with a letter, and must contain only letters or numbers or underscore
+  # variable can be defined in an external file vars_files: - <name of the variable file>.yaml
+  # variable can also be defined in the inventory file directly  <name of the variable>=<value>
+  # variable defined in the command line using "--extra-vars <name of the variable>=<value> has highest priority compared to other way
+  
+  #priority of scope is (highest to lowerest) :
+  # 1) cmd line using --extra-vars
+  # 2) "vars" in playbook (or with external file)
+  # 3) defined in the inventory at host level
+
+  vars:
+    webserver: nginx
+    webserver_root_dir: /usr/share/nginx/html
+    git_branch: master
+  #vars_files:
+  #- vars/vars.yaml
+  tasks:
+    - name : debug
+      debug:
+        msg: "the value of webserver is {{ webserver }} and value of root dir is {{ webserver_root_dir }} and git branch is {{ git_branch }}"
+    - name: webserver is installed
+      package:
+        name: "{{ webserver }}"
+        state: present
+    - name: webserver is running
+      service:
+        name: "{{ webserver }}"
+        state: started
+    - name: dest folder exists
+      file:
+        path: "{{ webserver_root_dir }}"
+        state: directory
+    - name: static website is deployed
+      get_url:
+        url: https://raw.githubusercontent.com/abdennour/example-static-website/{{ git_branch }}/index.html
+        #dest: /usr/share/nginx/html/index.html
+        dest: "{{ webserver_root_dir }}"

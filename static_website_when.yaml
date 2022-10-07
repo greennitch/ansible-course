@@ -1,0 +1,35 @@
+- hosts: prod, dev
+  become: yes
+
+  vars:
+    webserver: nginx
+    webserver_root_dir: /usr/share/nginx/html
+  #vars_files:
+  #- vars/vars.yaml
+  tasks:
+    - name : debug
+      debug:
+        msg: "the value of webserver is {{ webserver }} and value of root dir is {{ webserver_root_dir }} and git branch is {{ git_branch }}"
+    - name: webserver is installed
+      package:
+        name: "{{ webserver }}"
+        state: present
+    - name: webserver is running
+      service:
+        name: "{{ webserver }}"
+        state: started
+    - name: dest folder exists
+      file:
+        path: "{{ webserver_root_dir }}"
+        state: directory
+    - name: static website is deployed
+      get_url:
+        url: https://raw.githubusercontent.com/abdennour/example-static-website/{{ git_branch }}/index.html
+        #dest: /usr/share/nginx/html/index.html
+        dest: "{{ webserver_root_dir }}"
+    - name: login page is deployed
+      get_url:
+        url: https://raw.githubusercontent.com/abdennour/example-static-website/{{ git_branch }}/login.html
+        dest: "{{ webserver_root_dir }}"
+        ##when evalue the variable so no need of {{  }}
+      when: git_branch == 'ansible-course'        

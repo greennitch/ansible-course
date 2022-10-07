@@ -1,0 +1,17 @@
+- name: env file exists
+  file:
+    path: "{{ be_env_file }}"
+    state: touch
+#POPULATE DB_NAME
+- name: DB_NAME env is up-to-date
+  lineinfile:
+    path: "{{ be_env_file }}"
+    line: DB_NAME=test
+    regexp: '^DB_NAME='
+# POPULATE DB_CONNECTION
+- name: DB_CONNECTION env var is up-to-date
+  lineinfile:
+    path: "{{ be_env_file }}"
+    #line: DB_CONNECTION=mongodb://todo:todo@172.17.0.2:27017
+    line: DB_CONNECTION=mongodb://{{ hostvars['db']['db_todo_user'] }}:{{ hostvars['db']['db_todo_pass'] }}@{{ hostvars['localhost']['db_ip'] }}:27017
+    regexp: '^DB_CONNECTION='

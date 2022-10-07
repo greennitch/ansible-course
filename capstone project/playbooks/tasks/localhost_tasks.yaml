@@ -1,0 +1,12 @@
+- name: play to retrieve ip of db
+  hosts: dev1
+  tasks:
+  - name: DB Ip address is retrieved
+    shell: "docker inspect --format '{''{ .NetworkSettings.IPAddress }''}' db"
+    #shell:
+    #  cmd: echo a
+    delegate_to: localhost
+    register: ok
+  - name: debug reg
+    debug:
+      msg: "{{ ok.stdout }}"

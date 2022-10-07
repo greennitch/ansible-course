@@ -1,0 +1,9 @@
+- name: play to generate spec report using ansible facts
+  hosts: all
+  tasks:
+  - name: report is generated
+    template:
+      #template is by convention located under template folder
+      src: file.conf
+      dest: /tmp/specswithtemplate.conf
+    delegate_to: localhost

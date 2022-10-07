@@ -1,0 +1,100 @@
+- name: play for the database - installation
+  hosts: db
+  become: yes
+  tags:
+  - db-installation
+  tasks:
+  - name: gnupg is installed
+    package:
+      name: gnupg
+      state: present
+ #the following task is just to test the when condition using provided info
+  - name : mongodb key is added
+    apt_key:
+      url: https://www.mongodb.org/static/pgp/server-4.2.asc
+    when: ansible_distribution == 'Ubuntu'
+  - name: mongodb is enabled
+    copy:
+      content: |
+        [mongodb-org-4.2]
+        name=MongoDB Repository
+        baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.2/x86_64/
+        gpgcheck=1
+        enabled=1
+        gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc
+      dest: /etc/yum.repos.d/mongodb-org-4.2.repo   
+  - name: mongodb is installed
+    package:
+      name: mongodb-org
+      state: present
+  - name: mongodb is started
+    service:
+        name: mongod
+        state: started
+        enabled: yes
+- name: play for database - admin configuration
+  hosts: db
+  become: yes
+  tags: 
+   - db-config-admin
+  tasks:
+  #we first drop any existing user then create it
+  - name: admin user
+    command: "{{ item }}"
+    loop:
+    - mongo admin --eval 'db.dropUser("{{ db_admin_user }}")'
+    - |
+      mongo admin --eval 'db.createUser({ user: "{{ db_admin_user }}", pwd: "{{ db_admin_pass }}", roles: [ {role: "clusterAdmin", db: "admin"}, {role: "userAdminAnyDatabase", db: "admin"} ] } )'
+  - name : security is enabled
+    blockinfile: 
+      path: /etc/mongod.conf
+      block: |
+        security: 
+          authorization: "enabled"
+      state: present
+    notify: mongodb is restarted
+  handlers:
+  - name: mongodb is restarted
+    service:
+      name: mongod
+      state: restarted
+- name: play - rest of configuration 
+  hosts: db
+  become: yes
+  tags:
+  - db-config
+  tasks:
+  - name: pip3 is installed
+    package:
+      name: python3-pip
+      state: latest
+  - name: pip pymongo is installed
+    ansible.builtin.pip:
+      name: pymongo
+      state: latest
+  - name: to do db user exist
+    mongodb_user:
+      login_user: "{{ db_admin_user }}"
+      login_password: "{{ db_admin_pass }}"
+      database: admin
+      user: "{{ db_todo_user }}"
+      password: "{{ db_todo_pass }}"
+      state: present
+      roles:
+      - db: "{{ db_name_todo }}"
+        role: readWrite
+  - name: db accepts connection from anywhere
+    lineinfile:
+      path: /etc/mongod.conf
+      line: "  bindIp: 0.0.0.0"
+      #line: "  bindIp: 127.0.0.1,172.17.0.1"
+      regexp: '^(.*)bindIp(.*)$'
+      state: present
+    notify: mongodb is restarted
+  handlers:
+  - name: mongodb is restarted
+    service:
+      name: mongod
+      state: restarted
+
+    

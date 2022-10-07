@@ -1,0 +1,10 @@
+- name: exercise 9 
+  hosts: app
+  vars:
+    an_user: "atoumi"
+  tasks:
+  - name: get github repos content
+    uri:
+      url: https://api.github.com/users/{{ an_user }}/repos
+      dest: /tmp/git-repos.json
+    delegate_to: localhost

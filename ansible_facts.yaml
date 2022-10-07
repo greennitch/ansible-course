@@ -1,0 +1,11 @@
+- name: info about hosts
+  hosts: all
+  tasks:
+  - name: get distribution
+    copy:
+      content: "Distribution    :{{ ansible_facts.distribution }}\nDistribution Release    :{{ ansible_facts.distribution_release }}\n
+      Distribution Version    :{{ ansible_facts.distribution_version }}\n
+      Nbre CPU core    :{{ ansible_facts.processor_cores }}\n
+      Total Memory    :{{ ansible_facts.memtotal_mb }}\n
+      "
+      dest: /tmp/specs.report

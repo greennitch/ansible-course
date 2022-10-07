@@ -1,0 +1,74 @@
+- name: play frontend - prebuild 
+  hosts: app
+  become: yes
+  tags:
+  - fe-pre-build
+  tasks:
+  - name: nodejs is installed
+    import_role:
+      name: geerlingguy.nodejs
+    vars:
+      nodejs_version: "13.x"
+- name: play frontend - build
+  hosts: app
+  become: yes
+  vars:
+    be_build_workspace: /opt/build_dir
+    be_build_repo_url: https://github.com/kubernetes-tn/go-to-do-app.git
+    be_repo_name: go-to-do-app
+  tags:
+  - fe-build
+  tasks: 
+  - name: installation folder exist
+    file:
+      path: "{{ be_build_workspace }}"
+      state: directory
+  - name: deleted existing repo
+    file:
+      path: "{{ be_build_workspace }}/{{ be_repo_name }}"
+      state: absent
+  - name: git checkout
+    git:
+      repo: "{{ be_build_repo_url }}"
+      dest: "{{ be_build_workspace }}/{{ be_repo_name }}"
+  - name: app code is patched to accept uri
+    copy:
+      src: ../files/middleware.go
+      dest: "{{ be_build_workspace }}/{{ be_repo_name }}/server/middleware/middleware.go"
+  - name: npm is installed node modules
+    npm:
+      path: "{{ be_build_workspace }}/{{ be_repo_name }}/client"
+      state: present
+  - name: app code is patched to for change right address
+    copy:
+      src: ../files/To-Do-List.js
+      dest: "{{ be_build_workspace }}/{{ be_repo_name }}/client/src/To-Do-List.js"
+- name : play front end deploy
+  hosts: app
+  become: yes
+  vars:
+    fe_deploy_dir: /opt/build_dir/go-to-do-app/client
+  tags:
+  - fe-deploy
+  tasks:
+  - name: NODE | Install pm2
+    npm:
+      name: pm2
+      global: yes
+      production: yes
+      state: present
+  - name: NODE | app is stopped
+    shell: pm2 stop todo
+    args:
+      chdir: "{{ fe_deploy_dir }}"
+    ignore_errors: yes
+  #- name: .env file is edited
+  #  lineinfile:
+  #    path: "{{ fe_deploy_dir }}/.env"
+  #    regexp: '^REACT_APP_API_ENDPOINT='
+  #    line: REACT_APP_API_ENDPOINT=http://{{ ansible_host }}:5151
+  - name: NODE | start the application todolist
+    shell: pm2 start node_modules/react-scripts/scripts/start.js --name todo
+    args:
+      chdir: "{{ fe_deploy_dir }}"
+    ignore_errors: yes

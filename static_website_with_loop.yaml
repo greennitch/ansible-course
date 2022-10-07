@@ -1,0 +1,32 @@
+- hosts: prod, dev
+  become: yes
+
+  vars:
+    webserver: nginx
+    webserver_root_dir: /usr/share/nginx/html
+  #vars_files:
+  #- vars/vars.yaml
+  tasks:
+    - name : debug
+      debug:
+        msg: "the value of webserver is {{ webserver }} and value of root dir is {{ webserver_root_dir }} and git branch is {{ git_branch }}"
+    - name: webserver is installed
+      package:
+        name: "{{ webserver }}"
+        state: present
+    - name: webserver is running
+      service:
+        name: "{{ webserver }}"
+        state: started
+    - name: dest folder exists
+      file:
+        path: "{{ webserver_root_dir }}"
+        state: directory
+    - name: static website is deployed
+      get_url:
+        url: https://raw.githubusercontent.com/abdennour/example-static-website/{{ git_branch }}/{{ item }}.html
+        #dest: /usr/share/nginx/html/index.html
+        dest: "{{ webserver_root_dir }}"
+      loop:
+      - index
+      - about       

@@ -1,0 +1,10 @@
+name: part1
+-hosts: app1.company.com
+  tasks:
+  - name: user creation
+    ansible.builtin.user:
+    name: odoo
+    state: present
+
+
+

@@ -1,0 +1,16 @@
+- name: play for discover magic variables
+  hosts: dev, prod
+  tasks:
+  - name: print inventory host name
+    debug:
+      var: inventory_hostname
+  - name: print inventory hostvars
+    debug:
+      #var: hostvars
+      msg: ok
+  - name: print groups names
+    debug:
+      var: group_names
+  - name: print groups
+    debug:
+      var: groups

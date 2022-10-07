@@ -1,0 +1,17 @@
+- name: playbook which installs docker engine on a host
+  hosts: prod3
+  become: yes
+  roles:
+  - role: pauvos.docker_engine  
+  
+  tasks:
+  - name: Ensure group "docker" exists with correct gid
+    ansible.builtin.group:
+      name: docker
+      state: present
+      gid: 1750        
+
+  - name: rights added for ansible user
+    ansible.builtin.user:
+        name: ansibleuser
+        group: docker 

@@ -1,0 +1,19 @@
+- hosts: container
+  become: yes
+  vars_files:
+    - vars/users.yaml
+  tasks:
+    - name: debug
+      debug:
+        msg: "defined user is {{ assignement_user_name }} his id is {{ assignement_user_id }} and group is {{ assignement_group }}" 
+    - name: group exist
+      group:
+        name: "{{ assignement_group }}"
+        state: present
+    - name: user exist
+      user: 
+        name: "{{ assignement_user_name }}"
+        uid: "{{ assignement_user_id }}"
+        state: present
+        groups: "{{ assignement_group }}"
+        append: yes
